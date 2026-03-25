@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>인생맥주 발주 시스템</title>
+    <title>인생맥주 실시간 발주</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -16,131 +18,34 @@
             --point-red: #ff4d4d;
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: #e0e0e0;
-            font-family: 'Pretendard', sans-serif;
-            display: flex;
-            justify-content: center;
-            padding: 50px 0;
-            margin: 0;
-        }
-
-        @keyframes golden-glow {
-            0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
-            50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); }
-        }
-
-        .container {
-            width: 450px;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 40px;
-            border: 3px solid var(--gold);
-            animation: golden-glow 2s infinite ease-in-out;
-        }
-
-        .title {
-            font-size: 50px;
-            font-weight: 900;
-            color: #fff;
-            text-align: center;
-            margin-bottom: 25px;
-            text-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-pink);
-        }
-
-        .user-nav {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #444;
-            padding-bottom: 15px;
-        }
-
-        .nav-item {
-            cursor: pointer;
-            padding: 8px 20px;
-            font-weight: bold;
-            font-size: 18px;
-            border-radius: 15px;
-            transition: 0.3s;
-        }
-
+        body { background-color: var(--bg-color); color: #e0e0e0; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; padding: 50px 0; margin: 0; }
+        .container { width: 450px; background: var(--card-bg); padding: 30px; border-radius: 40px; border: 3px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+        .title { font-size: 50px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 25px; text-shadow: 0 0 15px var(--neon-pink); }
+        
+        .user-nav { display: flex; justify-content: space-around; margin-bottom: 25px; border-bottom: 2px solid #444; padding-bottom: 15px; }
+        .nav-item { cursor: pointer; padding: 8px 20px; font-weight: bold; font-size: 18px; border-radius: 15px; transition: 0.3s; opacity: 0.5; }
+        .nav-item.active { opacity: 1; transform: scale(1.1); }
+        .nav-item[data-user="juyong"] { color: var(--color-juyong); }
+        .nav-item[data-user="mingu"] { color: var(--color-mingu); }
+        .nav-item[data-user="sujeong"] { color: var(--color-sujeong); }
         .nav-item.active[data-user="juyong"] { background: var(--color-juyong); color: white; }
         .nav-item.active[data-user="mingu"] { background: var(--color-mingu); color: white; }
         .nav-item.active[data-user="sujeong"] { background: var(--color-sujeong); color: white; }
-        
-        .cat-title {
-            color: var(--gold);
-            font-size: 16px;
-            margin: 25px 0 10px 5px;
-            border-left: 4px solid var(--gold);
-            padding-left: 10px;
-            font-weight: bold;
-        }
 
-        .item-row {
-            background: #111;
-            border-radius: 12px;
-            padding: 10px 15px;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--gold);
-        }
-
-        /* 메뉴 이름 옆 붉은 별 스타일 */
+        .cat-title { color: var(--gold); font-size: 16px; margin: 25px 0 10px 5px; border-left: 4px solid var(--gold); padding-left: 10px; font-weight: bold; }
+        .item-row { background: #111; border-radius: 12px; padding: 10px 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold); }
         .star-red { color: var(--point-red); font-weight: bold; margin-left: 2px; }
+        
+        .item-row input { background: #222; border: 1px solid #444; border-radius: 5px; color: white; text-align: right; width: 60px; padding: 8px; font-size: 16px; }
+        
+        .btn-group-bottom { display: flex; gap: 10px; margin-bottom: 15px; margin-top: 30px;}
+        .btn-dark { flex: 1; padding: 18px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: var(--gold); font-weight: bold; cursor: pointer; font-size: 16px; }
+        .btn-dark:active { background: var(--gold); color: #111; }
 
-        .item-row input {
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 5px;
-            color: white;
-            text-align: right;
-            width: 50px;
-            padding: 5px;
-        }
-
-        .sticky-footer { margin-top: 30px; }
-        .btn-group-bottom { display: flex; gap: 10px; margin-bottom: 15px; }
-
-        .btn-dark {
-            flex: 1;
-            padding: 15px;
-            border-radius: 15px;
-            border: 2px solid var(--gold);
-            background: #111;
-            color: var(--gold);
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .confirm-wrapper { text-align: center; margin-bottom: 20px; }
-        .btn-confirm {
-            padding: 12px 40px;
-            border-radius: 30px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            background: #004085;
-        }
-        .btn-confirm.on { background: #007bff; box-shadow: 0 0 20px #007bff; }
-
-        .result-box {
-            background: #000;
-            min-height: 150px;
-            border-radius: 20px;
-            padding: 20px;
-            border: 2px solid #333;
-            line-height: 1.6;
-        }
-
-        .res-group { margin-bottom: 15px; padding: 5px 0; }
-        .res-item { font-size: 15px; margin-left: 10px; font-weight: 500; }
-
+        .result-box { background: #000; min-height: 150px; border-radius: 20px; padding: 20px; border: 2px solid #333; line-height: 1.8; }
+        .res-group { margin-bottom: 20px; padding: 5px 10px; border-radius: 10px; }
+        .res-item { font-size: 15px; font-weight: 500; }
+        
         .text-juyong { color: var(--color-juyong); border-left: 4px solid var(--color-juyong); }
         .text-mingu { color: var(--color-mingu); border-left: 4px solid var(--color-mingu); }
         .text-sujeong { color: var(--color-sujeong); border-left: 4px solid var(--color-sujeong); }
@@ -154,31 +59,29 @@
     <h1 class="title">인생맥주</h1>
     
     <nav class="user-nav">
-        <span class="nav-item user-juyong active" data-user="juyong" onclick="setUser('juyong', this)">주용</span>
-        <span class="nav-item user-mingu" data-user="mingu" onclick="setUser('mingu', this)">민구</span>
-        <span class="nav-item user-sujeong" data-user="sujeong" onclick="setUser('sujeong', this)">수정</span>
+        <span class="nav-item active" data-user="juyong" onclick="setUser('juyong', this)">주용</span>
+        <span class="nav-item" data-user="mingu" onclick="setUser('mingu', this)">민구</span>
+        <span class="nav-item" data-user="sujeong" onclick="setUser('sujeong', this)">수정</span>
     </nav>
 
-    <div class="order-section">
-        <div id="item-list"></div>
+    <div id="item-list"></div>
 
-        <div class="sticky-footer">
-            <div class="btn-group-bottom">
-                <button class="btn-dark" onclick="addOrder()">ORDER</button>
-                <button class="btn-dark" onclick="copyResult()">COPY</button>
-                <button class="btn-dark" onclick="resetAll()">RESET</button>
-            </div>
-            <div class="confirm-wrapper">
-                <button id="cfBtn" class="btn-confirm" onclick="toggleCf()">주문확인</button>
-            </div>
-            <div class="result-box" id="resArea">
-                <div style="color:#666; text-align:center; padding-top:50px;">발주 내역이 비어있습니다.</div>
-            </div>
-        </div>
+    <div class="btn-group-bottom">
+        <button class="btn-dark" onclick="addOrder()">ORDER (발주전송)</button>
+        <button class="btn-dark" onclick="resetAll()">RESET (전체삭제)</button>
+    </div>
+
+    <div class="result-box" id="resArea">
+        <div style="color:#666; text-align:center; padding-top:50px;">연결 중...</div>
     </div>
 </div>
 
 <script>
+    // 🔗 사장님의 Firebase 주소 자동 연동됨
+    const firebaseConfig = { databaseURL: "https://my-order-d3713-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('orders');
+
     const menuData = {
         "🐔 육류 / 닭 관련": ["계육(5개/박스)", "순살치킨", "테바나카(닭날개)", "닭껍질튀김", "닭발"],
         "🐷 돼지고기 / 소고기류": ["돈삼겹슬라이스", "우삼겹", "민찌", "부대찌개햄"],
@@ -197,20 +100,18 @@
     };
 
     let currentUser = 'juyong';
-    // 개별 발주 건을 순서대로 담는 배열 (합산하지 않음)
-    let totalOrders = []; 
-    let userColors = { juyong: 'text-juyong', mingu: 'text-mingu', sujeong: 'text-sujeong' };
+    const userColors = { juyong: 'text-juyong', mingu: 'text-mingu', sujeong: 'text-sujeong' };
 
+    // 메뉴판 생성
     const itemList = document.getElementById('item-list');
     for (let cat in menuData) {
         let div = document.createElement('div');
         div.innerHTML = `<div class="cat-title">${cat}</div>`;
         menuData[cat].forEach(it => {
+            let starLabel = (it.includes("밀떡볶이") || it.includes("계육")) ? "<span class='star-red'>★</span>" : "";
             let r = document.createElement('div');
             r.className = 'item-row';
-            // 메뉴 리스트 자체에 붉은 별표 추가
-            let starLabel = (it.includes("밀떡볶이") || it.includes("계육")) ? "<span class='star-red'>★</span>" : "";
-            r.innerHTML = `<label>${it}${starLabel}</label><input type="number" data-name="${it}" placeholder="0">`;
+            r.innerHTML = `<label>${it}${starLabel}</label><input type="number" id="input-${it}" placeholder="0">`;
             div.appendChild(r);
         });
         itemList.appendChild(div);
@@ -222,72 +123,69 @@
         el.classList.add('active');
     }
 
+    // 서버로 데이터 전송
     function addOrder() {
-        let hasIn = false;
-        document.querySelectorAll('#item-list input').forEach(i => {
-            let v = parseInt(i.value);
+        let hasValue = false;
+        document.querySelectorAll('#item-list input').forEach(input => {
+            let v = parseInt(input.value);
             if (v > 0) {
-                let n = i.getAttribute('data-name');
-                // 기존 수량에 더하지 않고 매번 새 객체로 추가 (개별 기록)
-                totalOrders.push({
+                let itemName = input.id.replace('input-', '');
+                db.push({
                     user: currentUser,
-                    item: n,
-                    qty: v
+                    item: itemName,
+                    qty: v,
+                    timestamp: Date.now()
                 });
-                hasIn = true;
-                i.value = ""; 
+                input.value = "";
+                hasValue = true;
             }
         });
-        if(hasIn) renderResult();
+        if(!hasValue) alert("수량을 입력해주세요.");
     }
 
-    function renderResult() {
+    // 서버 데이터 실시간 감시 및 화면 업데이트
+    db.on('value', (snapshot) => {
+        const data = snapshot.val();
         const resArea = document.getElementById('resArea');
-        let html = "";
+        resArea.innerHTML = "";
         
-        // 유저별로 묶어서 보여주기 위한 처리
-        const users = ['juyong', 'mingu', 'sujeong'];
-        
-        users.forEach(u => {
-            const userOrders = totalOrders.filter(o => o.user === u);
-            if (userOrders.length > 0) {
-                let itemLines = "";
-                userOrders.forEach((o, index) => {
-                    // 추가주문 판별: 전체 목록에서 이 품목이 이전에 나타난 적이 있는지 확인
-                    const firstAppearanceIndex = totalOrders.findIndex(all => all.item === o.item);
-                    const isAdd = totalOrders.indexOf(o) > firstAppearanceIndex;
-                    let addTag = isAdd ? " <span class='badge-add'>★추가주문</span>" : "";
-                    
-                    itemLines += `<div class="res-item">• ${o.item}: ${o.qty}개${addTag}</div>`;
-                });
-                
-                html += `<div class="res-group ${userColors[u]}" style="padding-left: 10px; margin-bottom: 15px;">${itemLines}</div>`;
+        if (!data) {
+            resArea.innerHTML = `<div style="color:#666; text-align:center; padding-top:50px;">발주 내역이 비어있습니다.</div>`;
+            return;
+        }
+
+        // 시간순 정렬
+        const allOrders = Object.values(data).sort((a, b) => a.timestamp - b.timestamp);
+        const userGroups = { juyong: [], mingu: [], sujeong: [] };
+        const firstSeenItem = {};
+
+        allOrders.forEach(order => {
+            // 추가주문 로직: 이전에 어떤 유저든 이 품목을 시킨 적이 있으면 ★추가주문 표시
+            let addTag = "";
+            if (firstSeenItem[order.item]) {
+                addTag = " <span class='badge-add'>★추가주문</span>";
             }
+            firstSeenItem[order.item] = true;
+
+            userGroups[order.user].push(`<div class="res-item">• ${order.item}: ${order.qty}개${addTag}</div>`);
         });
 
-        resArea.innerHTML = html || `<div style="color:#666; text-align:center; padding-top:50px;">발주 내역이 비어있습니다.</div>`;
-    }
+        // 화면에 출력
+        ['juyong', 'mingu', 'sujeong'].forEach(user => {
+            if (userGroups[user].length > 0) {
+                let userDiv = document.createElement('div');
+                userDiv.className = `res-group ${userColors[user]}`;
+                userDiv.innerHTML = userGroups[user].join('');
+                resArea.appendChild(userDiv);
+            }
+        });
+    });
 
-    function copyResult() {
-        const t = document.getElementById('resArea').innerText;
-        if(t.includes("비어있습니다")) return;
-        navigator.clipboard.writeText(t);
-        alert("내역이 복사되었습니다!");
-    }
-
+    // 전체 삭제 (서버 초기화)
     function resetAll() {
-        if(!confirm("모든 내역을 초기화할까요?")) return;
-        totalOrders = [];
-        renderResult();
-        const b = document.getElementById('cfBtn');
-        b.className = "btn-confirm";
-        b.innerText = "주문확인";
-    }
-
-    function toggleCf() {
-        const b = document.getElementById('cfBtn');
-        b.classList.toggle('on');
-        b.innerText = b.classList.contains('on') ? "확인완료 ✔" : "주문확인";
+        if(confirm("정말로 모든 실시간 내역을 초기화할까요?")) {
+            db.set(null);
+        }
     }
 </script>
 
