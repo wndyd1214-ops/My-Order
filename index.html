@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인생맥주 발주 시스템</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #262626;
+            --color-juyong: #3498db; 
+            --color-mingu: #ff6b81;  
+            --color-sujeong: #b2bec3; 
+            --neon-pink: #ff007f;
+            --gold: #d4af37;
+            --point-red: #ff4d4d;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #e0e0e0;
+            font-family: 'Pretendard', sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 50px 0;
+            margin: 0;
+        }
+
+        @keyframes golden-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); }
+        }
+
+        .container {
+            width: 450px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 40px;
+            border: 3px solid var(--gold);
+            animation: golden-glow 2s infinite ease-in-out;
+        }
+
+        .title {
+            font-size: 50px;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 0 0 15px var(--neon-pink), 0 0 30px var(--neon-pink);
+        }
+
+        .user-nav {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 15px;
+        }
+
+        .nav-item {
+            cursor: pointer;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 15px;
+            transition: 0.3s;
+        }
+
+        .nav-item.active[data-user="juyong"] { background: var(--color-juyong); color: white; }
+        .nav-item.active[data-user="mingu"] { background: var(--color-mingu); color: white; }
+        .nav-item.active[data-user="sujeong"] { background: var(--color-sujeong); color: white; }
+        
+        .cat-title {
+            color: var(--gold);
+            font-size: 16px;
+            margin: 25px 0 10px 5px;
+            border-left: 4px solid var(--gold);
+            padding-left: 10px;
+            font-weight: bold;
+        }
+
+        .item-row {
+            background: #111;
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--gold);
+        }
+
+        /* 메뉴 이름 옆 붉은 별 스타일 */
+        .star-red { color: var(--point-red); font-weight: bold; margin-left: 2px; }
+
+        .item-row input {
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: white;
+            text-align: right;
+            width: 50px;
+            padding: 5px;
+        }
+
+        .sticky-footer { margin-top: 30px; }
+        .btn-group-bottom { display: flex; gap: 10px; margin-bottom: 15px; }
+
+        .btn-dark {
+            flex: 1;
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px solid var(--gold);
+            background: #111;
+            color: var(--gold);
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .confirm-wrapper { text-align: center; margin-bottom: 20px; }
+        .btn-confirm {
+            padding: 12px 40px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            background: #004085;
+        }
+        .btn-confirm.on { background: #007bff; box-shadow: 0 0 20px #007bff; }
+
+        .result-box {
+            background: #000;
+            min-height: 150px;
+            border-radius: 20px;
+            padding: 20px;
+            border: 2px solid #333;
+            line-height: 1.6;
+        }
+
+        .res-group { margin-bottom: 15px; padding: 5px 0; }
+        .res-item { font-size: 15px; margin-left: 10px; font-weight: 500; }
+
+        .text-juyong { color: var(--color-juyong); border-left: 4px solid var(--color-juyong); }
+        .text-mingu { color: var(--color-mingu); border-left: 4px solid var(--color-mingu); }
+        .text-sujeong { color: var(--color-sujeong); border-left: 4px solid var(--color-sujeong); }
+        
+        .badge-add { color: #f1c40f; font-weight: bold; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="title">인생맥주</h1>
+    
+    <nav class="user-nav">
+        <span class="nav-item user-juyong active" data-user="juyong" onclick="setUser('juyong', this)">주용</span>
+        <span class="nav-item user-mingu" data-user="mingu" onclick="setUser('mingu', this)">민구</span>
+        <span class="nav-item user-sujeong" data-user="sujeong" onclick="setUser('sujeong', this)">수정</span>
+    </nav>
+
+    <div class="order-section">
+        <div id="item-list"></div>
+
+        <div class="sticky-footer">
+            <div class="btn-group-bottom">
+                <button class="btn-dark" onclick="addOrder()">ORDER</button>
+                <button class="btn-dark" onclick="copyResult()">COPY</button>
+                <button class="btn-dark" onclick="resetAll()">RESET</button>
+            </div>
+            <div class="confirm-wrapper">
+                <button id="cfBtn" class="btn-confirm" onclick="toggleCf()">주문확인</button>
+            </div>
+            <div class="result-box" id="resArea">
+                <div style="color:#666; text-align:center; padding-top:50px;">발주 내역이 비어있습니다.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const menuData = {
+        "🐔 육류 / 닭 관련": ["계육(5개/박스)", "순살치킨", "테바나카(닭날개)", "닭껍질튀김", "닭발"],
+        "🐷 돼지고기 / 소고기류": ["돈삼겹슬라이스", "우삼겹", "민찌", "부대찌개햄"],
+        "🐟 수산물 / 해산물 / 어묵류": ["바지락", "홍합", "불꽃오징어", "반건조오징어", "양념먹태", "손질먹태 70g", "손질먹태 130g", "튀김쥐포", "장쥐포", "교자만두", "부산어묵사각", "꼬치어묵"],
+        "🍟 튀김 / 감자 / 간식류": ["미국식치즈스틱", "길감자(20개/박스)", "모듬감자 (최소20봉)", "스트레이트컷", "시즌드배터드후라이즈", "포테이토칩", "모듬소시지", "말발굽소시지", "왕돈까스", "타코야끼", "호떡", "멕시칸불고기피자", "마카로니 과자"],
+        "🍢 꼬치류": ["염통꼬치", "은행꼬치", "물떡꼬치"],
+        "🍜 면 / 떡 / 곡류": ["밀떡볶이", "칼국수면", "쌀국수면", "우동면", "사리면", "당면", "분모자", "짜빠게티", "불닭볶음면", "항아리김치수제비 원팩"],
+        "🧂 양념 / 소스 / 조미료": ["뿌링클시즈닝", "위벨롭시즈닝", "허니버터맛시즈닝", "쌀국수분말", "미원", "혼다시", "맛소금", "후추가루", "파슬리", "소고기다시다", "건고추", "참깨", "설탕", "부침가루", "튀김가루", "멸치육수", "돼지불고기양념", "초고추장", "양조간장", "굵은고춧가루", "고운고춧가루(매운맛)", "빠이탄", "우동다시", "물엿", "케찹", "치폴레소스", "양념치킨소스", "매운데리야끼", "불닭소스", "불닭마요소스", "렌치 드레싱", "꼬치양념소스", "칠리소스", "떡볶이소스", "머스타드", "크리미버터소스", "퐁듀치즈소스", "데리야끼", "마요네즈", "돈가스소스", "아카시아청", "올리브유", "식용유", "참기름", "들기름"],
+        "🧀 치즈 / 유제품": ["눈꽃치즈", "체다슬라이스치즈", "아이스크림", "연유", "크림"],
+        "🧄 채소 / 신선식품": ["대파", "양파", "감자", "숙주", "홍고추", "청양고추", "새송이버섯 (2kg)", "계란", "다진마늘", "양배추"],
+        "🧃 디저트 / 음료": ["파인애플샤베트", "파인애플"],
+        "🧻 소모품 / 위생용품": ["유산지", "치킨박스", "호일", "키친타올", "일회용비닐봉투", "음식물쓰레기봉투", "철수세미", "목장갑"],
+        "🧼 세제 / 청소용품": ["락스", "퐁퐁", "식기세척기 세제(분홍색)", "식기세척기 린스 (파란색)"],
+        "🥜 기타 식재료": ["피땅콩", "줄줄이김", "가쓰오부시", "치킨무", "김가루"],
+        "🍽 포장용기": ["냉면용기", "사각용기 12개짜리", "사각용기 8개짜리", "소스종지", "종이봉투", "전용기", "배달 포장봉지 중", "배달 포장봉지 소"]
+    };
+
+    let currentUser = 'juyong';
+    // 개별 발주 건을 순서대로 담는 배열 (합산하지 않음)
+    let totalOrders = []; 
+    let userColors = { juyong: 'text-juyong', mingu: 'text-mingu', sujeong: 'text-sujeong' };
+
+    const itemList = document.getElementById('item-list');
+    for (let cat in menuData) {
+        let div = document.createElement('div');
+        div.innerHTML = `<div class="cat-title">${cat}</div>`;
+        menuData[cat].forEach(it => {
+            let r = document.createElement('div');
+            r.className = 'item-row';
+            // 메뉴 리스트 자체에 붉은 별표 추가
+            let starLabel = (it.includes("밀떡볶이") || it.includes("계육")) ? "<span class='star-red'>★</span>" : "";
+            r.innerHTML = `<label>${it}${starLabel}</label><input type="number" data-name="${it}" placeholder="0">`;
+            div.appendChild(r);
+        });
+        itemList.appendChild(div);
+    }
+
+    function setUser(u, el) {
+        currentUser = u;
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function addOrder() {
+        let hasIn = false;
+        document.querySelectorAll('#item-list input').forEach(i => {
+            let v = parseInt(i.value);
+            if (v > 0) {
+                let n = i.getAttribute('data-name');
+                // 기존 수량에 더하지 않고 매번 새 객체로 추가 (개별 기록)
+                totalOrders.push({
+                    user: currentUser,
+                    item: n,
+                    qty: v
+                });
+                hasIn = true;
+                i.value = ""; 
+            }
+        });
+        if(hasIn) renderResult();
+    }
+
+    function renderResult() {
+        const resArea = document.getElementById('resArea');
+        let html = "";
+        
+        // 유저별로 묶어서 보여주기 위한 처리
+        const users = ['juyong', 'mingu', 'sujeong'];
+        
+        users.forEach(u => {
+            const userOrders = totalOrders.filter(o => o.user === u);
+            if (userOrders.length > 0) {
+                let itemLines = "";
+                userOrders.forEach((o, index) => {
+                    // 추가주문 판별: 전체 목록에서 이 품목이 이전에 나타난 적이 있는지 확인
+                    const firstAppearanceIndex = totalOrders.findIndex(all => all.item === o.item);
+                    const isAdd = totalOrders.indexOf(o) > firstAppearanceIndex;
+                    let addTag = isAdd ? " <span class='badge-add'>★추가주문</span>" : "";
+                    
+                    itemLines += `<div class="res-item">• ${o.item}: ${o.qty}개${addTag}</div>`;
+                });
+                
+                html += `<div class="res-group ${userColors[u]}" style="padding-left: 10px; margin-bottom: 15px;">${itemLines}</div>`;
+            }
+        });
+
+        resArea.innerHTML = html || `<div style="color:#666; text-align:center; padding-top:50px;">발주 내역이 비어있습니다.</div>`;
+    }
+
+    function copyResult() {
+        const t = document.getElementById('resArea').innerText;
+        if(t.includes("비어있습니다")) return;
+        navigator.clipboard.writeText(t);
+        alert("내역이 복사되었습니다!");
+    }
+
+    function resetAll() {
+        if(!confirm("모든 내역을 초기화할까요?")) return;
+        totalOrders = [];
+        renderResult();
+        const b = document.getElementById('cfBtn');
+        b.className = "btn-confirm";
+        b.innerText = "주문확인";
+    }
+
+    function toggleCf() {
+        const b = document.getElementById('cfBtn');
+        b.classList.toggle('on');
+        b.innerText = b.classList.contains('on') ? "확인완료 ✔" : "주문확인";
+    }
+</script>
+
+</body>
+</html>
