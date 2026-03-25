@@ -19,7 +19,8 @@
         }
 
         body { background-color: var(--bg-color); color: #e0e0e0; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; padding: 50px 0; margin: 0; }
-        .container { width: 450px; background: var(--card-bg); padding: 30px; border-radius: 40px; border: 3px solid var(--gold); box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+        @keyframes golden-glow { 0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); } 50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); } }
+        .container { width: 450px; background: var(--card-bg); padding: 30px; border-radius: 40px; border: 3px solid var(--gold); animation: golden-glow 2s infinite ease-in-out; }
         .title { font-size: 50px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 25px; text-shadow: 0 0 15px var(--neon-pink); }
         
         .user-nav { display: flex; justify-content: space-around; margin-bottom: 25px; border-bottom: 2px solid #444; padding-bottom: 15px; }
@@ -35,12 +36,16 @@
         .cat-title { color: var(--gold); font-size: 16px; margin: 25px 0 10px 5px; border-left: 4px solid var(--gold); padding-left: 10px; font-weight: bold; }
         .item-row { background: #111; border-radius: 12px; padding: 10px 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold); }
         .star-red { color: var(--point-red); font-weight: bold; margin-left: 2px; }
-        
         .item-row input { background: #222; border: 1px solid #444; border-radius: 5px; color: white; text-align: right; width: 60px; padding: 8px; font-size: 16px; }
         
-        .btn-group-bottom { display: flex; gap: 10px; margin-bottom: 15px; margin-top: 30px;}
-        .btn-dark { flex: 1; padding: 18px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: var(--gold); font-weight: bold; cursor: pointer; font-size: 16px; }
+        .sticky-footer { margin-top: 30px; }
+        .btn-group-bottom { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-dark { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: var(--gold); font-weight: bold; cursor: pointer; font-size: 16px; }
         .btn-dark:active { background: var(--gold); color: #111; }
+
+        .confirm-wrapper { text-align: center; margin-bottom: 20px; }
+        .btn-confirm { padding: 12px 40px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; color: white; background: #004085; transition: 0.3s; }
+        .btn-confirm.on { background: #007bff; box-shadow: 0 0 20px #007bff; }
 
         .result-box { background: #000; min-height: 150px; border-radius: 20px; padding: 20px; border: 2px solid #333; line-height: 1.8; }
         .res-group { margin-bottom: 20px; padding: 5px 10px; border-radius: 10px; }
@@ -49,7 +54,6 @@
         .text-juyong { color: var(--color-juyong); border-left: 4px solid var(--color-juyong); }
         .text-mingu { color: var(--color-mingu); border-left: 4px solid var(--color-mingu); }
         .text-sujeong { color: var(--color-sujeong); border-left: 4px solid var(--color-sujeong); }
-        
         .badge-add { color: #f1c40f; font-weight: bold; font-size: 13px; }
     </style>
 </head>
@@ -66,13 +70,18 @@
 
     <div id="item-list"></div>
 
-    <div class="btn-group-bottom">
-        <button class="btn-dark" onclick="addOrder()">ORDER (발주전송)</button>
-        <button class="btn-dark" onclick="resetAll()">RESET (전체삭제)</button>
-    </div>
-
-    <div class="result-box" id="resArea">
-        <div style="color:#666; text-align:center; padding-top:50px;">연결 중...</div>
+    <div class="sticky-footer">
+        <div class="btn-group-bottom">
+            <button class="btn-dark" onclick="addOrder()">ORDER</button>
+            <button class="btn-dark" onclick="copyResult()">COPY</button>
+            <button class="btn-dark" onclick="resetAll()">RESET</button>
+        </div>
+        <div class="confirm-wrapper">
+            <button id="cfBtn" class="btn-confirm" onclick="toggleCf()">주문확인</button>
+        </div>
+        <div class="result-box" id="resArea">
+            <div style="color:#666; text-align:center; padding-top:50px;">연결 중...</div>
+        </div>
     </div>
 </div>
 
@@ -151,6 +160,10 @@
         
         if (!data) {
             resArea.innerHTML = `<div style="color:#666; text-align:center; padding-top:50px;">발주 내역이 비어있습니다.</div>`;
+            // 데이터가 없으면 주문확인 버튼 초기화
+            const cfBtn = document.getElementById('cfBtn');
+            cfBtn.className = "btn-confirm";
+            cfBtn.innerText = "주문확인";
             return;
         }
 
@@ -160,13 +173,11 @@
         const firstSeenItem = {};
 
         allOrders.forEach(order => {
-            // 추가주문 로직: 이전에 어떤 유저든 이 품목을 시킨 적이 있으면 ★추가주문 표시
             let addTag = "";
             if (firstSeenItem[order.item]) {
                 addTag = " <span class='badge-add'>★추가주문</span>";
             }
             firstSeenItem[order.item] = true;
-
             userGroups[order.user].push(`<div class="res-item">• ${order.item}: ${order.qty}개${addTag}</div>`);
         });
 
@@ -181,10 +192,45 @@
         });
     });
 
+    // 결과창 복사하기 (카톡 공유용)
+    function copyResult() {
+        const resArea = document.getElementById('resArea');
+        const textToCopy = resArea.innerText;
+        
+        if (textToCopy.includes("비어있습니다") || textToCopy.includes("연결 중")) {
+            alert("복사할 내역이 없습니다.");
+            return;
+        }
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert("내역이 복사되었습니다! 카톡방에 붙여넣기 하세요.");
+        }).catch(err => {
+            // 구형 브라우저 대응
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            alert("내역이 복사되었습니다!");
+        });
+    }
+
     // 전체 삭제 (서버 초기화)
     function resetAll() {
         if(confirm("정말로 모든 실시간 내역을 초기화할까요?")) {
             db.set(null);
+        }
+    }
+
+    // 주문확인 토글 버튼
+    function toggleCf() {
+        const cfBtn = document.getElementById('cfBtn');
+        cfBtn.classList.toggle('on');
+        if (cfBtn.classList.contains('on')) {
+            cfBtn.innerText = "확인완료 ✔";
+        } else {
+            cfBtn.innerText = "주문확인";
         }
     }
 </script>
