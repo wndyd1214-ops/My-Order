@@ -23,7 +23,7 @@
         .cat-title { color: var(--gold); font-size: 16px; margin: 25px 0 10px 5px; border-left: 4px solid var(--gold); padding-left: 10px; font-weight: bold; }
         .item-row { background: #111; border-radius: 12px; padding: 10px 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold); }
         .star-red { color: var(--point-red); font-weight: bold; margin-left: 2px; }
-        .item-row input { background: #222; border: 1px solid #444; border-radius: 5px; color: white; text-align: right; width: 60px; padding: 8px; font-size: 16px; }
+        .item-row input { background: #222; border: 1px solid #444; border-radius: 5px; color: white; text-align: right; width: 90px; padding: 8px; font-size: 16px; }
         .sticky-footer { margin-top: 30px; }
         .btn-group-bottom { display: flex; gap: 10px; margin-bottom: 15px; }
         .btn-dark { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: var(--gold); font-weight: bold; cursor: pointer; font-size: 16px; }
@@ -63,7 +63,6 @@
     </div>
 </div>
 <script>
-    // 🔗 사장님 전용 파이어베이스 창고 주소 자동 주입 완료!
     const firebaseConfig = { databaseURL: "https://my-order-d3713-default-rtdb.firebaseio.com" };
     
     firebase.initializeApp(firebaseConfig);
@@ -77,10 +76,10 @@
         "🐟 수산물 / 해산물 / 어묵류": ["바지락", "홍합", "불꽃오징어", "반건조오징어", "양념먹태", "손질먹태 70g", "손질먹태 130g", "튀김쥐포", "장쥐포", "교자만두", "부산어묵사각", "꼬치어묵"],
         "🍟 튀김 / 감자 / 간식류": ["미국식치즈스틱", "길감자(20개/박스)", "모듬감자 (최소20봉)", "스트레이트컷", "시즌드배터드후라이즈", "포테이토칩", "모듬소시지", "말발굽소시지", "왕돈까스", "타코야끼", "호떡", "멕시칸불고기피자", "마카로니 과자"],
         "🍢 꼬치류": ["염통꼬치", "은행꼬치", "물떡꼬치"],
-        "🍜 면 / 떡 / 곡류": ["밀떡볶이", "칼국수면", "쌀국수면", "우동면", "사리면", "당면", "분모자", "짜빠게티", "불닭볶음면", "항아리김치수제비 원팩"],
-        "🧂 양념 / 소스 / 조미료": ["뿌링클시즈닝", "위벨롭시즈닝", "허니버터맛시즈닝", "쌀국수분말", "미원", "혼다시", "맛소금", "후추가루", "파슬리", "소고기다시다", "건고추", "참깨", "설탕", "부침가루", "튀김가루", "멸치육수", "돼지불고기양념", "초고추장", "양조간장", "굵은고춧가루", "고운고춧가루(매운맛)", "빠이탄", "우동다시", "물엿", "케찹", "치폴레소스", "양념치킨소스", "매운데리야끼", "불닭소스", "불닭마요소스", "렌치 드레싱", "꼬치양념소스", "칠리소스", "떡볶이소스", "머스타드", "크리미버터소스", "퐁듀치즈소스", "데리야끼", "마요네즈", "돈가스소스", "아카시아청", "올리브유", "식용유", "참기름", "들기름"],
+        "🍜 면 / 떡 / 곡류": ["밀떡볶이", "인절미떡", "**인절미떡 추가!**", "**밀떡볶이 옆에 인절미떡이 쏙 드갔습니다.**", "칼국수면", "쌀국수면", "우동면", "사리면", "당면", "분모자", "짜빠게티", "불닭볶음면", "항아리김치수제비 원팩"],
+        "🧂 양념 / 소스 / 조미료": ["미숫가루", "**미숫가루 추가! 맨 앞에 넣었습니다.**", "뿌링클시즈닝", "위벨롭시즈닝", "허니버터맛시즈닝", "쌀국수분말", "미원", "혼다시", "맛소금", "후추가루", "파슬리", "소고기다시다", "건고추", "참깨", "설탕", "부침가루", "튀김가루", "멸치육수", "돼지불고기양념", "초고추장", "양조간장", "굵은고춧가루", "고운고춧가루(매운맛)", "빠이탄", "우동다시", "물엿", "케찹", "치폴레소스", "양념치킨소스", "매운데리야끼", "불닭소스", "불닭마요소스", "렌치 드레싱", "꼬치양념소스", "칠리소스", "떡볶이소스", "머스타드", "크리미버터소스", "퐁듀치즈소스", "데리야끼", "마요네즈", "돈가스소스", "아카시아청", "올리브유", "식용유", "참기름", "들기름"],
         "🧀 치즈 / 유제품": ["눈꽃치즈", "체다슬라이스치즈", "아이스크림", "연유", "크림"],
-        "🧄 채소 / 신선식품": ["대파", "양파", "감자", "숙주", "홍고추", "청양고추", "새송이버섯 (2kg)", "계란", "다진마늘", "양배추"],
+        "🧄 채소 / 신선식품": ["대파", "양파", "감자", "숙주", "홍고추", "청양고추", "새송이버섯", "**(2kg) 글자를 깔끔하게 지웠습니다!**", "계란", "다진마늘", "양배추"],
         "🧃 디저트 / 음료": ["파인애플샤베트", "파인애플"],
         "🧻 소모품 / 위생용품": ["유산지", "치킨박스", "호일", "키친타올", "일회용비닐봉투", "음식물쓰레기봉투", "철수세미", "목장갑"],
         "🧼 세제 / 청소용품": ["락스", "퐁퐁", "식기세척기 세제(분홍색)", "식기세척기 린스 (파란색)"],
@@ -99,7 +98,8 @@
             let starLabel = (it.includes("밀떡볶이") || it.includes("계육")) ? "<span class='star-red'>★</span>" : "";
             let r = document.createElement('div');
             r.className = 'item-row';
-            r.innerHTML = `<label>${it}${starLabel}</label><input type="number" id="input-${it}" placeholder="0">`;
+            // 📝 type="text"로 변경하여 영어 및 문자 입력이 가능하게 하고, 입력창 너비도 살짝 넓혔습니다.
+            r.innerHTML = `<label>${it}${starLabel}</label><input type="text" id="input-${it}" placeholder="0">`;
             div.appendChild(r);
         });
         itemList.appendChild(div);
@@ -114,8 +114,8 @@
     function addOrder() {
         let hasValue = false;
         document.querySelectorAll('#item-list input').forEach(input => {
-            let v = parseInt(input.value);
-            if (v > 0) {
+            let v = input.value.trim();
+            if (v !== "" && v !== "0") {
                 let itemName = input.id.replace('input-', '');
                 orderRef.push({ user: currentUser, item: itemName, qty: v, timestamp: Date.now() });
                 input.value = "";
@@ -139,7 +139,7 @@
         allOrders.forEach(order => {
             let addTag = firstSeenItem[order.item] ? " <span class='badge-add'>★추가주문</span>" : "";
             firstSeenItem[order.item] = true;
-            userGroups[order.user].push(`<div class="res-item">• ${order.item}: ${order.qty}개${addTag}</div>`);
+            userGroups[order.user].push(`<div class="res-item">• ${order.item}: ${order.qty}${addTag}</div>`);
         });
         ['juyong', 'mingu', 'sujeong'].forEach(user => {
             if (userGroups[user].length > 0) {
