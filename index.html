@@ -7,22 +7,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --card-bg: #262626;
-            --color-juyong: #3498db; 
-            --color-mingu: #ff6b81;  
-            --color-sujeong: #b2bec3; 
-            --neon-pink: #ff007f;
-            --gold: #d4af37;
-            --point-red: #ff4d4d;
-        }
-
+        :root { --bg-color: #1a1a1a; --card-bg: #262626; --color-juyong: #3498db; --color-mingu: #ff6b81; --color-sujeong: #b2bec3; --neon-pink: #ff007f; --gold: #d4af37; --point-red: #ff4d4d; }
         body { background-color: var(--bg-color); color: #e0e0e0; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; padding: 50px 0; margin: 0; }
-        @keyframes golden-glow { 0%, 100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); } 50% { box-shadow: 0 0 25px rgba(212, 175, 55, 0.8); } }
-        .container { width: 450px; background: var(--card-bg); padding: 30px; border-radius: 40px; border: 3px solid var(--gold); animation: golden-glow 2s infinite ease-in-out; }
+        .container { width: 450px; background: var(--card-bg); padding: 30px; border-radius: 40px; border: 3px solid var(--gold); }
         .title { font-size: 50px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 25px; text-shadow: 0 0 15px var(--neon-pink); }
-        
         .user-nav { display: flex; justify-content: space-around; margin-bottom: 25px; border-bottom: 2px solid #444; padding-bottom: 15px; }
         .nav-item { cursor: pointer; padding: 8px 20px; font-weight: bold; font-size: 18px; border-radius: 15px; transition: 0.3s; opacity: 0.5; }
         .nav-item.active { opacity: 1; transform: scale(1.1); }
@@ -32,25 +20,19 @@
         .nav-item.active[data-user="juyong"] { background: var(--color-juyong); color: white; }
         .nav-item.active[data-user="mingu"] { background: var(--color-mingu); color: white; }
         .nav-item.active[data-user="sujeong"] { background: var(--color-sujeong); color: white; }
-
         .cat-title { color: var(--gold); font-size: 16px; margin: 25px 0 10px 5px; border-left: 4px solid var(--gold); padding-left: 10px; font-weight: bold; }
         .item-row { background: #111; border-radius: 12px; padding: 10px 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold); }
         .star-red { color: var(--point-red); font-weight: bold; margin-left: 2px; }
         .item-row input { background: #222; border: 1px solid #444; border-radius: 5px; color: white; text-align: right; width: 60px; padding: 8px; font-size: 16px; }
-        
         .sticky-footer { margin-top: 30px; }
         .btn-group-bottom { display: flex; gap: 10px; margin-bottom: 15px; }
         .btn-dark { flex: 1; padding: 15px; border-radius: 15px; border: 2px solid var(--gold); background: #111; color: var(--gold); font-weight: bold; cursor: pointer; font-size: 16px; }
-        .btn-dark:active { background: var(--gold); color: #111; }
-
         .confirm-wrapper { text-align: center; margin-bottom: 20px; }
         .btn-confirm { padding: 12px 40px; border-radius: 30px; border: none; cursor: pointer; font-weight: bold; color: white; background: #333; transition: 0.3s; }
         .btn-confirm.on { background: #007bff; box-shadow: 0 0 20px #007bff; }
-
         .result-box { background: #000; min-height: 150px; border-radius: 20px; padding: 20px; border: 2px solid #333; line-height: 1.8; }
         .res-group { margin-bottom: 20px; padding: 5px 10px; border-radius: 10px; }
         .res-item { font-size: 15px; font-weight: 500; }
-        
         .text-juyong { color: var(--color-juyong); border-left: 4px solid var(--color-juyong); }
         .text-mingu { color: var(--color-mingu); border-left: 4px solid var(--color-mingu); }
         .text-sujeong { color: var(--color-sujeong); border-left: 4px solid var(--color-sujeong); }
@@ -58,18 +40,14 @@
     </style>
 </head>
 <body>
-
 <div class="container">
     <h1 class="title">인생맥주</h1>
-    
     <nav class="user-nav">
         <span class="nav-item active" data-user="juyong" onclick="setUser('juyong', this)">주용</span>
         <span class="nav-item" data-user="mingu" onclick="setUser('mingu', this)">민구</span>
         <span class="nav-item" data-user="sujeong" onclick="setUser('sujeong', this)">수정</span>
     </nav>
-
     <div id="item-list"></div>
-
     <div class="sticky-footer">
         <div class="btn-group-bottom">
             <button class="btn-dark" onclick="addOrder()">ORDER</button>
@@ -84,13 +62,14 @@
         </div>
     </div>
 </div>
-
 <script>
-    const firebaseConfig = { databaseURL: "https://my-order-d3713-default-rtdb.firebaseio.com" };
+    // 🔗 여기에 1단계에서 복사한 주소를 꼭 넣으세요!
+    const firebaseConfig = { databaseURL: "여기에_아까_복사한_주소_넣기" };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const orderRef = db.ref('orders');
-    const statusRef = db.ref('confirmStatus'); // 확인 상태 저장용
+    const statusRef = db.ref('confirmStatus');
 
     const menuData = {
         "🐔 육류 / 닭 관련": ["계육(5개/박스)", "순살치킨", "테바나카(닭날개)", "닭껍질튀김", "닭발"],
@@ -146,7 +125,6 @@
         if(!hasValue) alert("수량을 입력해주세요.");
     }
 
-    // 주문 데이터 및 확인 상태 감시
     orderRef.on('value', (snapshot) => {
         const data = snapshot.val();
         const resArea = document.getElementById('resArea');
@@ -173,7 +151,6 @@
         });
     });
 
-    // 확인 버튼 상태 실시간 동기화
     statusRef.on('value', (snapshot) => {
         const isConfirmed = snapshot.val();
         const cfBtn = document.getElementById('cfBtn');
@@ -187,9 +164,7 @@
     });
 
     function toggleCf() {
-        statusRef.once('value').then(snap => {
-            statusRef.set(!snap.val()); // 현재 상태를 반전시켜서 저장
-        });
+        statusRef.once('value').then(snap => { statusRef.set(!snap.val()); });
     }
 
     function copyResult() {
@@ -202,7 +177,7 @@
     function resetAll() {
         if(confirm("정말로 모든 실시간 내역을 초기화할까요?")) {
             orderRef.set(null);
-            statusRef.set(false); // 리셋할 때 확인 버튼도 초기화
+            statusRef.set(false);
         }
     }
 </script>
