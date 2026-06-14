@@ -11,7 +11,6 @@
         body { background-color: var(--bg-color); color: #e0e0e0; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; padding: 50px 0; margin: 0; position: relative; }
         .container { width: 450px; background: var(--card-bg); padding: 30px; border-radius: 40px; border: 3px solid var(--gold); position: relative; }
         
-        /* ⚙️ 설정 버튼 스타일 */
         .settings-btn { position: absolute; top: 25px; right: 25px; background: none; border: none; color: var(--gold); font-size: 28px; cursor: pointer; transition: 0.3s; z-index: 10; }
         .settings-btn:hover { transform: rotate(90deg); color: #fff; }
 
@@ -45,9 +44,8 @@
         .text-sujeong { color: var(--color-sujeong); border-left: 4px solid var(--color-sujeong); }
         .badge-add { color: #f1c40f; font-weight: bold; font-size: 13px; }
 
-        /* 📑 설정 모달 팝업 스타일 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: #222; width: 400px; max-height: 80vh; overflow-y: auto; padding: 25px; border-radius: 20px; border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.3); }
+        .modal-content { background: #222; width: 420px; max-height: 80vh; overflow-y: auto; padding: 25px; border-radius: 20px; border: 2px solid var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.3); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .modal-title { font-size: 20px; font-weight: bold; color: var(--gold); }
         .close-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
@@ -57,7 +55,9 @@
         .btn-add-item { background: var(--gold); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px; }
         .manage-list { margin-top: 20px; border-top: 1px solid #444; padding-top: 15px; }
         .manage-item-row { display: flex; justify-content: space-between; align-items: center; background: #111; padding: 8px 12px; margin-bottom: 5px; border-radius: 6px; font-size: 14px; }
-        .btn-del-item { background: var(--point-red); color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .manage-actions { display: flex; gap: 5px; }
+        .btn-edit-item { background: #27ae60; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-del-item { background: var(--point-red); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -103,7 +103,7 @@
         <button class="btn-add-item" onclick="addNewItem()">리스트에 품목 추가하기</button>
 
         <div class="manage-list">
-            <div style="font-size: 14px; color: var(--gold); margin-bottom: 10px; font-weight: bold;">📋 현재 등록된 품목 삭제 관리</div>
+            <div style="font-size: 14px; color: var(--gold); margin-bottom: 10px; font-weight: bold;">📋 현재 등록된 품목 편집/삭제 관리</div>
             <div id="manageItemsArea"></div>
         </div>
     </div>
@@ -117,7 +117,6 @@
     const orderRef = db.ref('orders');
     const statusRef = db.ref('confirmStatus');
 
-    // 기본 메뉴 데이터 구조
     const defaultMenuData = {
         "🐔 육류 / 닭 관련": ["계육(5개/박스)", "순살치킨", "테바나카(닭날개)", "닭껍질튀김", "닭발"],
         "🐷 돼지고기 / 소고기류": ["돈삼겹슬라이스", "우삼겹", "민찌", "부대찌개햄"],
@@ -135,18 +134,16 @@
         "🍽 포장용기": ["냉면용기", "사각용기 12개짜리", "사각용기 8개짜리", "소스종지", "종이봉투", "전용기", "배달 포장봉지 중", "배달 포장봉지 소"]
     };
 
-    // 저장소에서 커스텀 메뉴 데이터 불러오기 혹은 기본값 사용
     let menuData = JSON.parse(localStorage.getItem('insaengMenuData')) || defaultMenuData;
 
     let currentUser = 'juyong';
     const userColors = { juyong: 'text-juyong', mingu: 'text-mingu', sujeong: 'text-sujeong' };
 
-    // 화면에 메뉴판 렌더링 함수
     function renderItemList() {
         const itemList = document.getElementById('item-list');
         itemList.innerHTML = "";
         for (let cat in menuData) {
-            if(menuData[cat].length === 0) continue; // 품목이 없는 카테고리는 노출안함
+            if(menuData[cat].length === 0) continue;
             let div = document.createElement('div');
             div.innerHTML = `<div class="cat-title">${cat}</div>`;
             menuData[cat].forEach(it => {
@@ -160,7 +157,6 @@
         }
     }
 
-    // 설정창 카테고리 선택지 및 삭제 리스트 그리기
     function initModalContents() {
         const select = document.getElementById('modalCatSelect');
         select.innerHTML = "";
@@ -168,24 +164,24 @@
         manageArea.innerHTML = "";
 
         for (let cat in menuData) {
-            // 셀렉트 박스 옵션 추가
             let opt = document.createElement('option');
             opt.value = cat;
             opt.innerText = cat;
             select.appendChild(opt);
 
-            // 삭제 관리 목록 추가
             menuData[cat].forEach(it => {
                 let row = document.createElement('div');
                 row.className = 'manage-item-row';
                 row.innerHTML = `<span>[${cat.split(' ')[1] || cat}] ${it}</span>
-                                 <button class="btn-del-item" onclick="deleteItem('${cat}', '${it}')">삭제</button>`;
+                                 <div class="manage-actions">
+                                     <button class="btn-edit-item" onclick="editItem('${cat}', '${it}')">수정</button>
+                                     <button class="btn-del-item" onclick="deleteItem('${cat}', '${it}')">삭제</button>
+                                 </div>`;
                 manageArea.appendChild(row);
             });
         }
     }
 
-    // 모달 제어
     function openModal() {
         initModalContents();
         document.getElementById('settingsModal').style.display = 'flex';
@@ -194,7 +190,6 @@
         document.getElementById('settingsModal').style.display = 'none';
     }
 
-    // 품목 새로 추가하기 기능
     function addNewItem() {
         const cat = document.getElementById('modalCatSelect').value;
         const input = document.getElementById('modalItemInput');
@@ -204,10 +199,8 @@
             alert("추가할 품목 이름을 입력해주세요!");
             return;
         }
-
-        // 중복 검사
         if(menuData[cat].includes(newItemName)) {
-            alert("이미 해당 카테고리에 똑같은 이름의 품목이 존재합니다.");
+            alert("이미 똑같은 이름의 품목이 존재합니다.");
             return;
         }
 
@@ -217,10 +210,37 @@
         input.value = "";
         renderItemList();
         initModalContents();
-        alert(`'${cat}' 탭에 [${newItemName}] 품목이 추가되었습니다!`);
+        alert(`'${cat}'에 [${newItemName}] 품목이 추가되었습니다!`);
     }
 
-    // 품목 삭제하기 기능
+    // ✏️ 품목 이름 수정 기능 추가
+    function editItem(cat, oldName) {
+        const newName = prompt(`[${oldName}]의 변경할 새 이름을 입력하세요:`, oldName);
+        if (newName === null) return; // 취소 누른 경우
+        
+        const trimmedName = newName.trim();
+        if (!trimmedName) {
+            alert("품목 이름은 공백으로 설정할 수 없습니다.");
+            return;
+        }
+        if (oldName === trimmedName) return; // 기존 이름과 똑같은 경우
+
+        if (menuData[cat].includes(trimmedName)) {
+            alert("이미 해당 카테고리에 똑같은 이름의 품목이 존재합니다.");
+            return;
+        }
+
+        // 이름 교체 후 로컬 스토리지 저장
+        const idx = menuData[cat].indexOf(oldName);
+        if (idx !== -1) {
+            menuData[cat][idx] = trimmedName;
+            localStorage.setItem('insaengMenuData', JSON.stringify(menuData));
+            renderItemList();
+            initModalContents();
+            alert(`[${oldName}] 품목이 [${trimmedName}](으)로 수정되었습니다!`);
+        }
+    }
+
     function deleteItem(cat, itemName) {
         if(confirm(`정말로 [${itemName}] 품목을 발주 리스트에서 삭제하시겠습니까?`)) {
             menuData[cat] = menuData[cat].filter(it => it !== itemName);
@@ -306,7 +326,6 @@
         }
     }
 
-    // 앱 시작 시 최초 메뉴판 로드
     renderItemList();
 </script>
 </body>
