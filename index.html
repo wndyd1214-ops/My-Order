@@ -16,7 +16,6 @@
 
         .title { font-size: 50px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 25px; text-shadow: 0 0 15px var(--neon-pink); }
         
-        /* 🔍 검색창 세련된 디자인 */
         .search-wrapper { margin-bottom: 25px; position: relative; }
         .search-input { width: 100%; background: #111; border: 2px solid #444; padding: 12px 15px 12px 40px; border-radius: 15px; color: #fff; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
         .search-input:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(212,175,55,0.3); outline: none; }
@@ -32,7 +31,6 @@
         .nav-item.active[data-user="mingu"] { background: var(--color-mingu); color: white; }
         .nav-item.active[data-user="sujeong"] { background: var(--color-sujeong); color: white; }
         
-        /* 📐 카테고리 아코디언 스타일 디자인 */
         .cat-block { margin-bottom: 12px; background: #1f1f1f; border-radius: 16px; border: 1px solid #333; overflow: hidden; }
         .cat-header { background: #111; color: var(--gold); font-size: 16px; padding: 15px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; transition: 0.2s; -webkit-user-select: none; user-select: none; }
         .cat-header:hover { background: #151515; }
@@ -72,6 +70,17 @@
         .manage-actions { display: flex; gap: 5px; }
         .btn-edit-item { background: #27ae60; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-del-item { background: var(--point-red); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        
+        /* 📜 히스토리 UI 스타일 디자인 */
+        .history-section { border-top: 2px dashed #444; margin-top: 25px; padding-top: 20px; }
+        .history-title { font-size: 15px; color: var(--gold); font-weight: bold; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
+        .history-container { background: #111; border-radius: 10px; padding: 15px; max-height: 250px; overflow-y: auto; font-size: 13px; line-height: 1.6; border: 1px solid #333; }
+        .history-date-group { margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .history-date-title { color: #f1c40f; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+        .history-log-line { color: #ccc; padding-left: 5px; margin-bottom: 3px; }
+        .user-tag-juyong { color: var(--color-juyong); font-weight: bold; }
+        .user-tag-mingu { color: var(--color-mingu); font-weight: bold; }
+        .user-tag-sujeong { color: var(--color-sujeong); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -128,6 +137,13 @@
             <div style="font-size: 14px; color: var(--gold); margin-bottom: 10px; font-weight: bold;">📋 현재 등록된 품목 편집/삭제 관리</div>
             <div id="manageItemsArea"></div>
         </div>
+
+        <div class="history-section">
+            <div class="history-title">📜 최근 일주일(7일) 발주 히스토리 기록</div>
+            <div class="history-container" id="historyViewArea">
+                <div style="color:#666; text-align:center; padding-top:20px;">불러오는 중...</div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -138,6 +154,7 @@
     const db = firebase.database();
     const orderRef = db.ref('orders');
     const statusRef = db.ref('confirmStatus');
+    const historyRef = db.ref('history'); // 히스토리 전용 파이어베이스 경로
 
     const defaultMenuData = {
         "🐔 육류 / 닭 관련": ["계육(5개/박스)", "순살치킨", "테바나카(닭날개)", "닭껍질튀김", "닭발"],
@@ -159,8 +176,8 @@
     let menuData = JSON.parse(localStorage.getItem('insaengMenuData')) || defaultMenuData;
     let currentUser = 'juyong';
     const userColors = { juyong: 'text-juyong', mingu: 'text-mingu', sujeong: 'text-sujeong' };
+    const userNames = { juyong: '주용', mingu: '민구', sujeong: '수정' };
 
-    // 화면에 아코디언 메뉴판 구현 렌더링
     function renderItemList() {
         const itemList = document.getElementById('item-list');
         itemList.innerHTML = "";
@@ -173,7 +190,6 @@
             block.className = 'cat-block';
             block.id = `catBlock-${catIndex}`;
             
-            // 헤더 클릭 시 접고 펴지도록 설정
             block.innerHTML = `
                 <div class="cat-header" onclick="toggleCategory(${catIndex})">
                     <span>${cat}</span>
@@ -197,7 +213,6 @@
         }
     }
 
-    // 아코디언 토글 함수
     function toggleCategory(index) {
         const body = document.getElementById(`catBody-${index}`);
         const icon = document.getElementById(`catIcon-${index}`);
@@ -212,7 +227,6 @@
         }
     }
 
-    // 🔍 실시간 품목 검색 필터링 함수
     function filterMenu() {
         const query = document.getElementById('searchInput').value.toLowerCase().trim();
         const blocks = document.querySelectorAll('.cat-block');
@@ -228,7 +242,7 @@
                 if (itemName.includes(query)) {
                     row.style.display = 'flex';
                     if (query !== "") {
-                        row.classList.add('highlight'); // 검색어 일치 항목 테두리 골드 강조
+                        row.classList.add('highlight');
                     } else {
                         row.classList.remove('highlight');
                     }
@@ -240,13 +254,11 @@
             });
             
             if (query === "") {
-                // 검색어 없으면 전부 다 닫기 모드
                 body.style.display = 'none';
                 block.style.display = 'block';
                 icon.innerText = '▼';
                 icon.style.color = '#666';
             } else {
-                // 검색어가 있고, 해당 품목이 매칭되면 강제로 활성화 확장
                 if (hasVisibleItem) {
                     block.style.display = 'block';
                     body.style.display = 'block';
@@ -257,6 +269,27 @@
                 }
             }
         });
+    }
+
+    // 🕒 타임스탬프 포맷 가공 기능 (오후 04:15 형태)
+    function formatTime(timestamp) {
+        const d = new Date(timestamp);
+        let hrs = d.getHours();
+        const mins = String(d.getMinutes()).padStart(2, '0');
+        const ampm = hrs >= 12 ? '오후' : '오전';
+        hrs = hrs % 12;
+        hrs = hrs ? hrs : 12; 
+        return `${ampm} ${String(hrs).padStart(2, '0')}:${mins}`;
+    }
+
+    // 📅 날짜 가공 기능 (2026-06-15 월요일 형태)
+    function formatDate(timestamp) {
+        const d = new Date(timestamp);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const date = String(d.getDate()).padStart(2, '0');
+        const week = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+        return `${year}-${month}-${date} (${week}요일)`;
     }
 
     function initModalContents() {
@@ -282,6 +315,64 @@
                 manageArea.appendChild(row);
             });
         }
+        loadHistoryView(); // 모달 켤 때 히스토리 로드
+    }
+
+    // 📜 7일치 히스토리 불러와서 화면에 그리기
+    function loadHistoryView() {
+        const area = document.getElementById('historyViewArea');
+        
+        historyRef.once('value', (snapshot) => {
+            const data = snapshot.val();
+            if(!data) {
+                area.innerHTML = `<div style="color:#666; text-align:center; padding-top:20px;">기록된 과거 발주 내역이 없습니다.</div>`;
+                return;
+            }
+            
+            // 시간 역순 (최신순) 정렬
+            const logs = Object.values(data).sort((a,b) => b.timestamp - a.timestamp);
+            
+            // 날짜별 그룹핑
+            const dateGroups = {};
+            logs.forEach(log => {
+                const dateStr = formatDate(log.timestamp);
+                if(!dateGroups[dateStr]) dateGroups[dateStr] = [];
+                dateGroups[dateStr].push(log);
+            });
+            
+            area.innerHTML = "";
+            for(let date in dateGroups) {
+                let groupDiv = document.createElement('div');
+                groupDiv.className = 'history-date-group';
+                groupDiv.innerHTML = `<div class="history-date-title">📅 ${date}</div>`;
+                
+                dateGroups[date].forEach(log => {
+                    let p = document.createElement('div');
+                    p.className = 'history-log-line';
+                    const timeStr = formatTime(log.timestamp);
+                    p.innerHTML = `[${timeStr}] <span class="user-tag-${log.user}">${userNames[log.user]}</span>: ${log.item} (${log.qty}개)`;
+                    groupDiv.appendChild(p);
+                });
+                area.appendChild(groupDiv);
+            }
+        });
+    }
+
+    // 🚨 [핵심] 일주일(7일)이 지난 히스토리 자동 데이터 청소 기능
+    function cleanOldHistory() {
+        const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+        const cutoffTime = Date.now() - ONE_WEEK_MS;
+        
+        historyRef.once('value', (snapshot) => {
+            const data = snapshot.val();
+            if(!data) return;
+            
+            Object.keys(data).forEach(key => {
+                if(data[key].timestamp < cutoffTime) {
+                    historyRef.child(key).remove(); // 7일 지난 건 파베에서 자동 삭제
+                }
+            });
+        });
     }
 
     function openModal() {
@@ -312,7 +403,7 @@
         input.value = "";
         renderItemList();
         initModalContents();
-        document.getElementById('searchInput').value = ""; // 검색 초기화
+        document.getElementById('searchInput').value = "";
         alert(`'${cat}'에 [${newItemName}] 품목이 추가되었습니다!`);
     }
 
@@ -365,7 +456,13 @@
             let v = input.value.trim();
             if (v !== "" && v !== "0") {
                 let itemName = input.id.replace('input-', '');
-                orderRef.push({ user: currentUser, item: itemName, qty: v, timestamp: Date.now() });
+                const orderData = { user: currentUser, item: itemName, qty: v, timestamp: Date.now() };
+                
+                // 1. 실시간 발주창에 전송
+                orderRef.push(orderData);
+                // 2. 일주일 백업을 위해 히스토리 DB에도 즉시 더블 아카이빙 저장
+                historyRef.push(orderData);
+
                 input.value = "";
                 hasValue = true;
             }
@@ -423,13 +520,15 @@
     }
 
     function resetAll() {
-        if(confirm("정말로 모든 실시간 내역을 초기화할까요?")) {
+        if(confirm("실시간 화면만 초기화됩니다.\n(※ 설정창의 7일 히스토리 기록은 안전하게 유지됩니다) \n\n정말로 초기화할까요?")) {
             orderRef.set(null);
             statusRef.set(false);
         }
     }
 
+    // 앱 실행 시 실행 구조
     renderItemList();
+    cleanOldHistory(); // 앱 구동될 때마다 옛날 데이터(7일 초과)는 자동 청소 자동 실행
 </script>
 </body>
 </html>
