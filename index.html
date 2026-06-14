@@ -15,6 +15,13 @@
         .settings-btn:hover { transform: rotate(90deg); color: #fff; }
 
         .title { font-size: 50px; font-weight: 900; color: #fff; text-align: center; margin-bottom: 25px; text-shadow: 0 0 15px var(--neon-pink); }
+        
+        /* 🔍 검색창 세련된 디자인 */
+        .search-wrapper { margin-bottom: 25px; position: relative; }
+        .search-input { width: 100%; background: #111; border: 2px solid #444; padding: 12px 15px 12px 40px; border-radius: 15px; color: #fff; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        .search-input:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(212,175,55,0.3); outline: none; }
+        .search-icon { position: absolute; left: 15px; top: 14px; color: #666; font-size: 16px; }
+
         .user-nav { display: flex; justify-content: space-around; margin-bottom: 25px; border-bottom: 2px solid #444; padding-bottom: 15px; }
         .nav-item { cursor: pointer; padding: 8px 20px; font-weight: bold; font-size: 18px; border-radius: 15px; transition: 0.3s; opacity: 0.5; }
         .nav-item.active { opacity: 1; transform: scale(1.1); }
@@ -25,8 +32,15 @@
         .nav-item.active[data-user="mingu"] { background: var(--color-mingu); color: white; }
         .nav-item.active[data-user="sujeong"] { background: var(--color-sujeong); color: white; }
         
-        .cat-title { color: var(--gold); font-size: 16px; margin: 25px 0 10px 5px; border-left: 4px solid var(--gold); padding-left: 10px; font-weight: bold; }
-        .item-row { background: #111; border-radius: 12px; padding: 10px 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--gold); }
+        /* 📐 카테고리 아코디언 스타일 디자인 */
+        .cat-block { margin-bottom: 12px; background: #1f1f1f; border-radius: 16px; border: 1px solid #333; overflow: hidden; }
+        .cat-header { background: #111; color: var(--gold); font-size: 16px; padding: 15px 20px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; transition: 0.2s; -webkit-user-select: none; user-select: none; }
+        .cat-header:hover { background: #151515; }
+        .cat-icon { font-size: 12px; color: #666; transition: 0.3s; }
+        .cat-body { display: none; padding: 10px; background: #1e1e1e; }
+        
+        .item-row { background: #111; border-radius: 12px; padding: 10px 15px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        .item-row.highlight { border-color: var(--gold); }
         .star-red { color: var(--point-red); font-weight: bold; margin-left: 2px; }
         .item-row input { background: #222; border: 1px solid #444; border-radius: 5px; color: white; text-align: right; width: 90px; padding: 8px; font-size: 16px; }
         
@@ -65,12 +79,20 @@
     <button class="settings-btn" onclick="openModal()">⚙️</button>
     
     <h1 class="title">인생맥주</h1>
+
+    <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="필요한 식재료 품목 검색..." oninput="filterMenu()">
+    </div>
+
     <nav class="user-nav">
         <span class="nav-item active" data-user="juyong" onclick="setUser('juyong', this)">주용</span>
         <span class="nav-item" data-user="mingu" onclick="setUser('mingu', this)">민구</span>
         <span class="nav-item" data-user="sujeong" onclick="setUser('sujeong', this)">수정</span>
     </nav>
+
     <div id="item-list"></div>
+
     <div class="sticky-footer">
         <div class="btn-group-bottom">
             <button class="btn-dark" onclick="addOrder()">ORDER</button>
@@ -135,26 +157,106 @@
     };
 
     let menuData = JSON.parse(localStorage.getItem('insaengMenuData')) || defaultMenuData;
-
     let currentUser = 'juyong';
     const userColors = { juyong: 'text-juyong', mingu: 'text-mingu', sujeong: 'text-sujeong' };
 
+    // 화면에 아코디언 메뉴판 구현 렌더링
     function renderItemList() {
         const itemList = document.getElementById('item-list');
         itemList.innerHTML = "";
+        
+        let catIndex = 0;
         for (let cat in menuData) {
             if(menuData[cat].length === 0) continue;
-            let div = document.createElement('div');
-            div.innerHTML = `<div class="cat-title">${cat}</div>`;
+            
+            let block = document.createElement('div');
+            block.className = 'cat-block';
+            block.id = `catBlock-${catIndex}`;
+            
+            // 헤더 클릭 시 접고 펴지도록 설정
+            block.innerHTML = `
+                <div class="cat-header" onclick="toggleCategory(${catIndex})">
+                    <span>${cat}</span>
+                    <span class="cat-icon" id="catIcon-${catIndex}">▼</span>
+                </div>
+                <div class="cat-body" id="catBody-${catIndex}"></div>
+            `;
+            
+            const body = block.querySelector(`#catBody-${catIndex}`);
             menuData[cat].forEach(it => {
                 let starLabel = (it.includes("밀떡볶이") || it.includes("계육")) ? "<span class='star-red'>★</span>" : "";
                 let r = document.createElement('div');
                 r.className = 'item-row';
+                r.setAttribute('data-item-name', it);
                 r.innerHTML = `<label>${it}${starLabel}</label><input type="text" id="input-${it}" placeholder="0">`;
-                div.appendChild(r);
+                body.appendChild(r);
             });
-            itemList.appendChild(div);
+            
+            itemList.appendChild(block);
+            catIndex++;
         }
+    }
+
+    // 아코디언 토글 함수
+    function toggleCategory(index) {
+        const body = document.getElementById(`catBody-${index}`);
+        const icon = document.getElementById(`catIcon-${index}`);
+        if (body.style.display === 'block') {
+            body.style.display = 'none';
+            icon.innerText = '▼';
+            icon.style.color = '#666';
+        } else {
+            body.style.display = 'block';
+            icon.innerText = '▲';
+            icon.style.color = 'var(--gold)';
+        }
+    }
+
+    // 🔍 실시간 품목 검색 필터링 함수
+    function filterMenu() {
+        const query = document.getElementById('searchInput').value.toLowerCase().trim();
+        const blocks = document.querySelectorAll('.cat-block');
+        
+        blocks.forEach(block => {
+            const body = block.querySelector('.cat-body');
+            const icon = block.querySelector('.cat-icon');
+            const rows = block.querySelectorAll('.item-row');
+            let hasVisibleItem = false;
+            
+            rows.forEach(row => {
+                const itemName = row.getAttribute('data-item-name').toLowerCase();
+                if (itemName.includes(query)) {
+                    row.style.display = 'flex';
+                    if (query !== "") {
+                        row.classList.add('highlight'); // 검색어 일치 항목 테두리 골드 강조
+                    } else {
+                        row.classList.remove('highlight');
+                    }
+                    hasVisibleItem = true;
+                } else {
+                    row.style.display = 'none';
+                    row.classList.remove('highlight');
+                }
+            });
+            
+            if (query === "") {
+                // 검색어 없으면 전부 다 닫기 모드
+                body.style.display = 'none';
+                block.style.display = 'block';
+                icon.innerText = '▼';
+                icon.style.color = '#666';
+            } else {
+                // 검색어가 있고, 해당 품목이 매칭되면 강제로 활성화 확장
+                if (hasVisibleItem) {
+                    block.style.display = 'block';
+                    body.style.display = 'block';
+                    icon.innerText = '▲';
+                    icon.style.color = 'var(--gold)';
+                } else {
+                    block.style.display = 'none';
+                }
+            }
+        });
     }
 
     function initModalContents() {
@@ -210,33 +312,33 @@
         input.value = "";
         renderItemList();
         initModalContents();
+        document.getElementById('searchInput').value = ""; // 검색 초기화
         alert(`'${cat}'에 [${newItemName}] 품목이 추가되었습니다!`);
     }
 
-    // ✏️ 품목 이름 수정 기능 추가
     function editItem(cat, oldName) {
         const newName = prompt(`[${oldName}]의 변경할 새 이름을 입력하세요:`, oldName);
-        if (newName === null) return; // 취소 누른 경우
+        if (newName === null) return;
         
         const trimmedName = newName.trim();
         if (!trimmedName) {
             alert("품목 이름은 공백으로 설정할 수 없습니다.");
             return;
         }
-        if (oldName === trimmedName) return; // 기존 이름과 똑같은 경우
+        if (oldName === trimmedName) return;
 
         if (menuData[cat].includes(trimmedName)) {
             alert("이미 해당 카테고리에 똑같은 이름의 품목이 존재합니다.");
             return;
         }
 
-        // 이름 교체 후 로컬 스토리지 저장
         const idx = menuData[cat].indexOf(oldName);
         if (idx !== -1) {
             menuData[cat][idx] = trimmedName;
             localStorage.setItem('insaengMenuData', JSON.stringify(menuData));
             renderItemList();
             initModalContents();
+            document.getElementById('searchInput').value = "";
             alert(`[${oldName}] 품목이 [${trimmedName}](으)로 수정되었습니다!`);
         }
     }
@@ -247,6 +349,7 @@
             localStorage.setItem('insaengMenuData', JSON.stringify(menuData));
             renderItemList();
             initModalContents();
+            document.getElementById('searchInput').value = "";
         }
     }
 
